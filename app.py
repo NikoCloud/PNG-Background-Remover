@@ -3,11 +3,14 @@ Persona Asset Forge — main application window.
 Uses CustomTkinter for the UI and a background thread + queue for processing.
 """
 
+import json
 import os
 import queue
 import sys
 import threading
 import tkinter as tk
+import urllib.request
+import webbrowser
 from tkinter import filedialog, messagebox
 
 import customtkinter as ctk
@@ -15,11 +18,45 @@ from PIL import Image, ImageTk
 
 import processor
 
+# ---------------------------------------------------------------------------
+# Version & update config
+# ---------------------------------------------------------------------------
+APP_VERSION   = "1.3.0"
+RELEASES_URL  = "https://github.com/NikoCloud/Persona-Asset-Forge/releases/latest"
+RELEASES_API  = "https://api.github.com/repos/NikoCloud/Persona-Asset-Forge/releases/latest"
+SETTINGS_FILE = os.path.join(os.path.expandvars('%APPDATA%'),
+                             'PersonaAssetForge', 'settings.json')
+
 
 def resource_path(relative: str) -> str:
     """Return absolute path to a bundled resource (works for both dev and PyInstaller EXE)."""
     base = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
     return os.path.join(base, relative)
+
+
+def _load_settings() -> dict:
+    try:
+        with open(SETTINGS_FILE, 'r') as f:
+            return json.load(f)
+    except Exception:
+        return {'check_updates': True}
+
+
+def _save_settings(data: dict):
+    try:
+        os.makedirs(os.path.dirname(SETTINGS_FILE), exist_ok=True)
+        with open(SETTINGS_FILE, 'w') as f:
+            json.dump(data, f, indent=2)
+    except Exception:
+        pass
+
+
+def _version_tuple(v: str) -> tuple:
+    """Convert '1.10.2' → (1, 10, 2) for correct numeric comparison."""
+    try:
+        return tuple(int(x) for x in v.strip().lstrip('v').split('.'))
+    except Exception:
+        return (0,)
 
 # --------------------------------------------------------------------------
 # Appearance
@@ -101,8 +138,17 @@ class BgRemoverApp(ctk.CTk):
         self._adv_blur      = tk.DoubleVar(value=2.0)
         self._adv_visible   = False
 
+        # Update-check state
+        self._settings = _load_settings()
+        self._check_updates_var = tk.BooleanVar(
+            value=self._settings.get('check_updates', True))
+
         self._build_ui()
         self.bind('<Escape>', lambda e: self._close_viewer())
+
+        # Kick off update check after window is shown
+        if self._check_updates_var.get():
+            self.after(800, self._start_update_check)
 
     # ------------------------------------------------------------------
     # UI construction
@@ -110,9 +156,10 @@ class BgRemoverApp(ctk.CTk):
 
     def _build_ui(self):
         self.grid_columnconfigure(0, weight=1)
-        self.grid_rowconfigure(1, weight=1)
+        self.grid_rowconfigure(1, weight=1)   # tabs expand
+        self.grid_rowconfigure(2, weight=0)   # status bar fixed
 
-        # --- Header bar with logo + app name ---
+        # --- Row 0: Header bar ---
         header = ctk.CTkFrame(self, corner_radius=0, fg_color='#1a1a1a', height=56)
         header.grid(row=0, column=0, sticky='ew')
         header.grid_propagate(False)
@@ -133,14 +180,116 @@ class BgRemoverApp(ctk.CTk):
                      text_color='#e8e8e8').grid(row=0, column=1, padx=0, pady=6,
                                                 sticky='w')
 
+        # --- Row 1: Tabs ---
         tabs = ctk.CTkTabview(self)
-        tabs.grid(row=1, column=0, padx=8, pady=(4, 8), sticky='nsew')
+        tabs.grid(row=1, column=0, padx=8, pady=(4, 4), sticky='nsew')
 
         tabs.add("Background Remover")
         tabs.add("Grid Slicer")
 
         self._build_remover_tab(tabs.tab("Background Remover"))
         GridSlicerTab(tabs.tab("Grid Slicer")).pack(fill='both', expand=True)
+
+        # --- Row 2: Status bar ---
+        self._build_status_bar()
+
+    def _build_status_bar(self):
+        bar = ctk.CTkFrame(self, corner_radius=0, fg_color='#141414', height=28)
+        bar.grid(row=2, column=0, sticky='ew')
+        bar.grid_propagate(False)
+        bar.grid_columnconfigure(4, weight=1)  # spacer fills right side
+
+        # Version label — far left
+        ctk.CTkLabel(bar, text=f'v{APP_VERSION}',
+                     font=ctk.CTkFont(family='Arial', size=11),
+                     text_color='#666666').grid(row=0, column=0, padx=(10, 6), pady=4)
+
+        # Separator
+        ctk.CTkLabel(bar, text='│', text_color='#333333',
+                     font=ctk.CTkFont(size=11)).grid(row=0, column=1, pady=4)
+
+        # Check for updates checkbox
+        ctk.CTkCheckBox(bar, text='Check for updates',
+                        variable=self._check_updates_var,
+                        font=ctk.CTkFont(family='Arial', size=11),
+                        width=140, height=20,
+                        command=self._on_update_check_toggled
+                        ).grid(row=0, column=2, padx=(6, 6), pady=4)
+
+        # Separator
+        ctk.CTkLabel(bar, text='│', text_color='#333333',
+                     font=ctk.CTkFont(size=11)).grid(row=0, column=3, pady=4)
+
+        # Status label
+        self._update_status_lbl = ctk.CTkLabel(
+            bar, text='', font=ctk.CTkFont(family='Arial', size=11),
+            text_color='#666666', anchor='w')
+        self._update_status_lbl.grid(row=0, column=4, padx=(6, 4), pady=4, sticky='w')
+
+        # Download button (hidden unless update available)
+        self._update_dl_btn = ctk.CTkButton(
+            bar, text='↓ Download Update', width=150, height=20,
+            font=ctk.CTkFont(family='Arial', size=11),
+            fg_color='#1a6fb5', hover_color='#155a94',
+            command=lambda: webbrowser.open(RELEASES_URL))
+        # Not gridded until needed
+
+        # Set initial status label text
+        if self._check_updates_var.get():
+            self._set_update_status('checking')
+        else:
+            self._set_update_status('disabled')
+
+    # ------------------------------------------------------------------
+    # Update check
+    # ------------------------------------------------------------------
+
+    def _on_update_check_toggled(self):
+        enabled = self._check_updates_var.get()
+        self._settings['check_updates'] = enabled
+        _save_settings(self._settings)
+        if enabled:
+            self._set_update_status('checking')
+            self._start_update_check()
+        else:
+            self._set_update_status('disabled')
+
+    def _start_update_check(self):
+        threading.Thread(target=self._fetch_latest_version, daemon=True).start()
+
+    def _fetch_latest_version(self):
+        try:
+            req = urllib.request.Request(
+                RELEASES_API,
+                headers={'User-Agent': f'PersonaAssetForge/{APP_VERSION}'})
+            with urllib.request.urlopen(req, timeout=6) as resp:
+                data = json.loads(resp.read())
+            latest = data['tag_name'].lstrip('v')
+            if _version_tuple(latest) > _version_tuple(APP_VERSION):
+                self.after(0, lambda: self._set_update_status('available', latest))
+            else:
+                self.after(0, lambda: self._set_update_status('uptodate'))
+        except Exception:
+            self.after(0, lambda: self._set_update_status('offline'))
+
+    def _set_update_status(self, state: str, version: str = ''):
+        """Update the status bar label and show/hide the download button."""
+        cfg = {
+            'checking':  ('Checking for updates…',       '#666666'),
+            'uptodate':  ('✓  Up to date',               '#4CAF50'),
+            'available': (f'⚠  Update available: v{version}', '#FF9800'),
+            'offline':   ('●  No connection',            '#888888'),
+            'disabled':  ('○  Updates disabled',         '#555555'),
+        }
+        text, color = cfg.get(state, ('', '#666666'))
+        self._update_status_lbl.configure(text=text, text_color=color)
+
+        if state == 'available':
+            self._update_dl_btn.grid(row=0, column=5, padx=(4, 10), pady=4)
+        else:
+            self._update_dl_btn.grid_forget()
+
+    # ------------------------------------------------------------------
 
     def _build_remover_tab(self, parent):
         parent.grid_columnconfigure(0, weight=1)
