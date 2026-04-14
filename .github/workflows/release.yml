@@ -1,0 +1,82 @@
+name: Build & Release
+
+# Triggers when you push a version tag, e.g. git tag v1.4.0 && git push --tags
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      # ── Checkout ────────────────────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── Python ──────────────────────────────────────────────────────────────
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install Python dependencies
+        run: pip install pillow customtkinter darkdetect pyinstaller
+
+      # ── Build portable EXE ──────────────────────────────────────────────────
+      - name: Build PersonaAssetForge.exe (PyInstaller)
+        run: python -m PyInstaller bg_remover.spec
+
+      - name: Verify EXE exists
+        run: |
+          if (!(Test-Path "dist\PersonaAssetForge.exe")) {
+            Write-Error "EXE not found after PyInstaller build"
+            exit 1
+          }
+          $mb = [math]::Round((Get-Item "dist\PersonaAssetForge.exe").Length / 1MB, 1)
+          Write-Host "PersonaAssetForge.exe — $mb MB"
+
+      # ── Inno Setup installer ─────────────────────────────────────────────────
+      - name: Install Inno Setup
+        run: choco install innosetup --yes --no-progress
+
+      - name: Build installer (Inno Setup)
+        run: '& "C:\Program Files (x86)\Inno Setup 6\iscc.exe" installer.iss'
+
+      - name: Verify installer exists
+        run: |
+          if (!(Test-Path "dist\PersonaAssetForge_Setup.exe")) {
+            Write-Error "Installer not found after Inno Setup build"
+            exit 1
+          }
+          $mb = [math]::Round((Get-Item "dist\PersonaAssetForge_Setup.exe").Length / 1MB, 1)
+          Write-Host "PersonaAssetForge_Setup.exe — $mb MB"
+
+      # ── Create GitHub Release ────────────────────────────────────────────────
+      - name: Extract version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> $env:GITHUB_OUTPUT
+        shell: bash
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "v${{ steps.version.outputs.VERSION }}"
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          files: |
+            dist/PersonaAssetForge.exe
+            dist/PersonaAssetForge_Setup.exe
+          body: |
+            ## Download
+
+            | File | Description |
+            |------|-------------|
+            | `PersonaAssetForge_Setup.exe` | **Installer** — installs to Program Files, adds Start Menu shortcut |
+            | `PersonaAssetForge.exe` | **Portable** — run from anywhere, no install needed |
+
+            ---
+            *Release notes auto-generated from commits since last tag.*
