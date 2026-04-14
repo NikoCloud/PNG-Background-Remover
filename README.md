@@ -63,7 +63,7 @@ Persona Asset Forge is the first step in a two-app workflow for SillyTavern char
 ## Screenshots
 
 ### Background Remover
-![Background Remover tab](docs/screenshots/bg_remover_tab.png)
+![Background Remover tab](docs/screenshots/bg_removal_tab.png)
 
 ### Grid Slicer — Grid Preview
 ![Grid overlay preview](docs/screenshots/grid_slicer_preview.png)
