@@ -21,7 +21,7 @@ import processor
 # ---------------------------------------------------------------------------
 # Version & update config
 # ---------------------------------------------------------------------------
-APP_VERSION   = "1.3.0"
+APP_VERSION   = "1.4.0"
 RELEASES_URL  = "https://github.com/NikoCloud/Persona-Asset-Forge/releases/latest"
 RELEASES_API  = "https://api.github.com/repos/NikoCloud/Persona-Asset-Forge/releases/latest"
 SETTINGS_FILE = os.path.join(os.path.expandvars('%APPDATA%'),

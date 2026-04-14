@@ -5,7 +5,7 @@
 ; Output: dist\PersonaAssetForge_Setup.exe
 
 #define AppName      "Persona Asset Forge"
-#define AppVersion   "1.3.0"
+#define AppVersion   "1.4.0"
 #define AppPublisher "NikoCloud"
 #define AppURL       "https://github.com/NikoCloud/Persona-Asset-Forge"
 #define AppExeName   "PersonaAssetForge.exe"
