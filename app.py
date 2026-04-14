@@ -1,10 +1,11 @@
 """
-Main application window for PNG Background Remover.
+Persona Asset Forge — main application window.
 Uses CustomTkinter for the UI and a background thread + queue for processing.
 """
 
 import os
 import queue
+import sys
 import threading
 import tkinter as tk
 from tkinter import filedialog, messagebox
@@ -13,6 +14,12 @@ import customtkinter as ctk
 from PIL import Image, ImageTk
 
 import processor
+
+
+def resource_path(relative: str) -> str:
+    """Return absolute path to a bundled resource (works for both dev and PyInstaller EXE)."""
+    base = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(base, relative)
 
 # --------------------------------------------------------------------------
 # Appearance
@@ -57,10 +64,16 @@ class BgRemoverApp(ctk.CTk):
     def __init__(self):
         super().__init__()
 
-        self.title("PNG Background Remover v1.0")
-        self.geometry("980x800")
-        self.minsize(720, 580)
+        self.title("Persona Asset Forge")
+        self.geometry("980x820")
+        self.minsize(720, 600)
         self.resizable(True, True)
+
+        # App icon
+        try:
+            self.iconbitmap(resource_path('icon.ico'))
+        except Exception:
+            pass
 
         self._folder_var = tk.StringVar()
         self._selected_files = None
@@ -97,10 +110,31 @@ class BgRemoverApp(ctk.CTk):
 
     def _build_ui(self):
         self.grid_columnconfigure(0, weight=1)
-        self.grid_rowconfigure(0, weight=1)
+        self.grid_rowconfigure(1, weight=1)
+
+        # --- Header bar with logo + app name ---
+        header = ctk.CTkFrame(self, corner_radius=0, fg_color='#1a1a1a', height=56)
+        header.grid(row=0, column=0, sticky='ew')
+        header.grid_propagate(False)
+        header.grid_columnconfigure(1, weight=1)
+
+        try:
+            logo_img = Image.open(resource_path('logo.png')).convert('RGBA')
+            logo_img.thumbnail((44, 44), Image.LANCZOS)
+            logo_photo = ctk.CTkImage(light_image=logo_img, dark_image=logo_img,
+                                      size=(44, 44))
+            logo_lbl = ctk.CTkLabel(header, image=logo_photo, text='')
+            logo_lbl.grid(row=0, column=0, padx=(14, 8), pady=6)
+        except Exception:
+            pass
+
+        ctk.CTkLabel(header, text='Persona Asset Forge',
+                     font=ctk.CTkFont(family='Arial', size=20, weight='bold'),
+                     text_color='#e8e8e8').grid(row=0, column=1, padx=0, pady=6,
+                                                sticky='w')
 
         tabs = ctk.CTkTabview(self)
-        tabs.grid(row=0, column=0, padx=8, pady=8, sticky='nsew')
+        tabs.grid(row=1, column=0, padx=8, pady=(4, 8), sticky='nsew')
 
         tabs.add("Background Remover")
         tabs.add("Grid Slicer")

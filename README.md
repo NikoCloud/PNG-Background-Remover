@@ -1,14 +1,28 @@
-# PNG Background Remover
+<p align="center">
+  <img src="logo.png" width="120" alt="Persona Asset Forge logo"/>
+</p>
 
-> A lightweight, standalone Windows tool for batch-removing backgrounds from PNG and JPEG character images — built for [SillyTavern](https://github.com/SillyTavern/SillyTavern) AI character card creators.
+<h1 align="center">Persona Asset Forge</h1>
 
-![Banner](docs/screenshots/banner.png)
+<p align="center">
+  A lightweight, standalone Windows tool for preparing AI character assets — built for <a href="https://github.com/SillyTavern/SillyTavern">SillyTavern</a> character card creators.
+</p>
+
+<p align="center">
+  <a href="https://github.com/NikoCloud/Persona-Asset-Forge/releases/latest">
+    <img src="https://img.shields.io/github/v/release/NikoCloud/Persona-Asset-Forge?label=Download&style=for-the-badge&color=4CAF50" alt="Download latest release"/>
+  </a>
+  &nbsp;
+  <img src="https://img.shields.io/badge/Platform-Windows-blue?style=for-the-badge" alt="Windows"/>
+  &nbsp;
+  <img src="https://img.shields.io/badge/Python-3.10+-yellow?style=for-the-badge" alt="Python 3.10+"/>
+</p>
 
 ---
 
 ## Features
 
-**Background Remover tab**
+**Background Remover**
 - Removes **black**, **white**, and **checkered** backgrounds automatically
 - Handles **non-contiguous regions** — cleans gaps between arm and body, hair strands, etc.
 - Batch processes entire folders or individual files
@@ -18,14 +32,14 @@
 - Advanced tolerance sliders — tune dark/light thresholds and edge blur per run
 - Output saved to a `background removal/` subfolder next to your source files
 
-**Grid Slicer tab**
+**Grid Slicer**
 - Load a character emotion grid sheet (PNG or JPEG)
 - **Auto-detect** grid lines, or manually specify rows × columns
 - Preview the detected grid with green overlay before committing
 - **Generate Cells** — all cells processed in memory, nothing saved yet
 - Click any thumbnail to **deselect** it (dims it); click again to re-select
 - **Save Selected** — only writes the cells you kept, named by row/col
-- Full-size viewer per cell, with arrow navigation
+- Full-size viewer per cell with arrow navigation
 
 ---
 
@@ -44,10 +58,10 @@
 
 ## Installation
 
-### Option A — Pre-built EXE (recommended)
+### Option A — Pre-built EXE *(recommended)*
 
-1. Go to the [**Releases**](https://github.com/NikoCloud/PNG-Background-Remover/releases) page
-2. Download `BGRemover.exe` from the latest release
+1. Go to the [**Releases**](https://github.com/NikoCloud/Persona-Asset-Forge/releases) page
+2. Download **`BGRemover.exe`** from the latest release
 3. Double-click to run — no install, no Python required
 
 ### Option B — Run from source
@@ -55,8 +69,8 @@
 **Requirements:** Python 3.10+
 
 ```bash
-git clone https://github.com/NikoCloud/PNG-Background-Remover.git
-cd PNG-Background-Remover
+git clone https://github.com/NikoCloud/Persona-Asset-Forge.git
+cd Persona-Asset-Forge
 pip install -r requirements.txt
 python main.py
 ```
@@ -84,12 +98,12 @@ Output: `dist/BGRemover.exe` (~19 MB, fully self-contained).
 ### Background Remover
 
 1. Click **Folder…** to process all images in a folder, or **File(s)…** to pick individual images
-2. Optionally expand **⚙ Advanced ▾** to adjust tolerances (see table below)
+2. Optionally expand **⚙ Advanced ▾** to adjust tolerances
 3. Click **Start Processing**
 4. Thumbnails appear as each image finishes — click any to open the full-size viewer
 5. Click **Open Output Folder** to jump straight to the results
 
-Output is saved to a `background removal/` subfolder next to your source files.
+Output is saved to a **`background removal/`** subfolder next to your source files.
 
 #### Advanced Settings
 
@@ -106,7 +120,7 @@ Output is saved to a `background removal/` subfolder next to your source files.
 1. Click **Select Image…** and pick your emotion grid sheet (PNG or JPEG)
 2. Click **Auto-Detect Grid** — the tool scans for separator lines automatically
    - If auto-detect fails, click **Manual ▾**, enter rows × columns, and click **Apply**
-3. Verify the green grid overlay on the preview — it should align with cell borders
+3. Verify the green grid overlay on the preview
 4. Optionally check **Remove BG** to strip backgrounds from each cell as it's cropped
 5. Click **Generate Cells** — all cells appear as thumbnails, all selected by default
 6. **Click any thumbnail** to deselect it (dims to gray); click again to re-select
@@ -114,7 +128,7 @@ Output is saved to a `background removal/` subfolder next to your source files.
 8. Click **💾 Save Selected (X/Y)** to write only your chosen cells to disk
 9. Click **Open Output Folder** to see the results
 
-Output is saved to a `{imagename}_slices/` subfolder next to your source image.
+Output is saved to a **`{imagename}_slices/`** subfolder next to your source image.
 
 ---
 
@@ -126,7 +140,7 @@ Output is saved to a `{imagename}_slices/` subfolder next to your source image.
 |---|---|
 | **Folder…** | Select a folder — processes all PNG/JPEG files inside |
 | **File(s)…** | Pick one or more individual images |
-| **Start Processing** | Begin batch removal |
+| **Start Processing** | Begin batch background removal |
 | **⚙ Advanced ▾** | Toggle tolerance and blur sliders |
 | **Open Output Folder** | Opens `background removal/` in Explorer |
 | *Click thumbnail* | Open full-size viewer |
@@ -145,37 +159,37 @@ Output is saved to a `{imagename}_slices/` subfolder next to your source image.
 | **💾 Save Selected** | Write selected cells to `{name}_slices/` |
 | **Open Output Folder** | Open the slices folder in Explorer |
 
-### Viewer (both tabs)
+### Viewer *(both tabs)*
 
 | Input | Action |
 |---|---|
 | Click thumbnail | Open full-size viewer |
 | ◀ / ▶ buttons | Previous / next image |
 | ← / → arrow keys | Previous / next image |
-| **✕ Close** button or **Escape** | Close viewer |
+| **✕ Close** or **Escape** | Close viewer |
 
 ---
 
 ## How It Works
 
 ### Background Classification
-Samples ~32 evenly-spaced pixels along all four edges and majority-votes for the background type. Requires only 35% agreement, so it works correctly even when the subject fills most of the bottom edge (portraits, shoulder-up shots). Checks for checkered patterns first by sampling a tile grid.
+Samples ~32 evenly-spaced pixels along all four edges and majority-votes for the background type. Requires only 35% agreement, so it works correctly even when the subject fills most of the bottom edge (portraits, shoulder-up shots).
 
-### Background Removal (Pass 1 — Flood Fill)
-Seeds a flood fill from every border pixel on a downscaled (512px) copy of the image, colour-gated to only spread through pixels that match the border background colour within tolerance. The resulting mask is upscaled back to full resolution.
+### Background Removal — Pass 1 (Flood Fill)
+Seeds a flood fill from every border pixel on a downscaled copy of the image, colour-gated to only spread through pixels matching the background within tolerance. The mask is upscaled back to full resolution.
 
-### Background Removal (Pass 2 — Global Colour Match)
-A fast O(w×h) pass using PIL's `point()` and `ImageChops` removes enclosed background regions that the flood fill couldn't reach (e.g. a white gap between an arm and body).
+### Background Removal — Pass 2 (Global Colour Match)
+A fast O(w×h) pass using PIL's `point()` and `ImageChops` removes enclosed background regions the flood fill couldn't reach (e.g. a white gap between an arm and body).
 
 ### Alpha Edge Smoothing
-A light Gaussian blur is applied to the alpha channel only — the RGB data is untouched — producing clean, anti-aliased edges without blurring the subject.
+A light Gaussian blur applied to the alpha channel only — RGB data is untouched — producing clean, anti-aliased edges without blurring the subject.
 
 ### Grid Detection
-Scans each row and column of the image (on a downscaled copy for speed) counting background-coloured pixels. Rows/columns where ≥90% of pixels are background are marked as separators. Consecutive separator indices are collapsed to a single midpoint boundary.
+Scans each row and column (on a downscaled copy for speed) counting background-coloured pixels. Rows/columns where ≥90% are background become separator candidates. Consecutive separator indices are collapsed to a single midpoint boundary.
 
 ---
 
-## Requirements (source / build)
+## Requirements *(source / build)*
 
 | Package | Purpose |
 |---|---|

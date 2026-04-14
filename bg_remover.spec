@@ -1,6 +1,6 @@
 # -*- mode: python ; coding: utf-8 -*-
 #
-# PyInstaller spec for PNG Background Remover.
+# PyInstaller spec for Persona Asset Forge.
 # Use a spec file (not the CLI) so we can correctly collect customtkinter assets.
 #
 # Build with:  python -m PyInstaller bg_remover.spec
@@ -18,7 +18,10 @@ a = Analysis(
     ['main.py'],
     pathex=[],
     binaries=[],
-    datas=ctk_datas + darkdetect_datas,
+    datas=ctk_datas + darkdetect_datas + [
+        ('logo.png', '.'),   # bundled for in-app header logo
+        ('icon.ico', '.'),   # bundled for window icon at runtime
+    ],
     hiddenimports=(
         collect_submodules('customtkinter') +
         [
@@ -74,7 +77,7 @@ exe = EXE(
     a.zipfiles,
     a.datas,
     [],
-    name='BGRemover',
+    name='PersonaAssetForge',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -86,5 +89,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=None,          # Replace with path to a .ico file if desired
+    icon='icon.ico',
 )

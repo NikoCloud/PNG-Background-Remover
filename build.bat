@@ -37,7 +37,7 @@ echo Done.
 echo.
 
 :: Build the EXE
-echo Building BGRemover.exe (this takes 60-120 seconds)...
+echo Building PersonaAssetForge.exe (this takes 60-120 seconds)...
 echo.
 python -m PyInstaller bg_remover.spec
 if errorlevel 1 (
@@ -49,17 +49,17 @@ if errorlevel 1 (
 
 :: Report result
 echo.
-if exist "dist\BGRemover.exe" (
+if exist "dist\PersonaAssetForge.exe" (
     echo ============================================
     echo   BUILD SUCCESSFUL
     echo ============================================
-    for %%A in ("dist\BGRemover.exe") do (
+    for %%A in ("dist\PersonaAssetForge.exe") do (
         set /a SIZE_MB=%%~zA / 1048576
-        echo   Output : dist\BGRemover.exe
+        echo   Output : dist\PersonaAssetForge.exe
         echo   Size   : !SIZE_MB! MB
     )
     echo.
-    echo You can now copy dist\BGRemover.exe anywhere and run it standalone.
+    echo You can now copy dist\PersonaAssetForge.exe anywhere and run it standalone.
 ) else (
     echo ERROR: EXE not found after build. Check PyInstaller output above.
     pause
