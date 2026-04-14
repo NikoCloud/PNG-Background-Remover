@@ -20,6 +20,23 @@
 
 ---
 
+## Persona Workflow — Sister Apps
+
+Persona Asset Forge is the first step in a two-app workflow for SillyTavern character creators:
+
+| Step | App | Purpose |
+|------|-----|---------|
+| **1 — Prepare** | **Persona Asset Forge** *(this app)* | Remove backgrounds from character art and expression sprites. Slice emotion grid sheets into individual cells. Export clean, transparent PNGs. |
+| **2 — Package** | **[Persona Packager Studio](https://github.com/NikoCloud/Persona-Packager-Studio)** | Fill in card metadata, assign your clean expression sprites to named slots, and export a SillyTavern-ready `.charx` file in one click. |
+
+**Typical workflow:**
+1. Source or generate your character art and expression sprites
+2. Open **Persona Asset Forge** → remove backgrounds / slice grids → export clean PNGs
+3. Open **[Persona Packager Studio](https://github.com/NikoCloud/Persona-Packager-Studio)** → fill metadata → assign expressions → export `.charx`
+4. Import into SillyTavern
+
+---
+
 ## Features
 
 **Background Remover**
